@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Eurosport HD</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+</head>
+<body style="margin:0; background:#000; display:flex; justify-content:center; align-items:center; height:100vh;">
+  <video id="video" width="100%" height="100%" controls autoplay></video>
+  <script>
+    async function initPlayer() {
+      const video = document.getElementById('video');
+      const player = new shaka.Player(video);
+
+      // Konfigurasi DRM dengan license_key statis
+      player.configure({
+        drm: {
+          servers: {
+            'com.widevine.alpha': 'https://atemeshield1-voe.sysln.id'
+          },
+          advanced: {
+            'com.widevine.alpha': {
+              serverCertificate: null,
+              videoRobustness: 'SW_SECURE_CRYPTO'
+            }
+          }
+        }
+      });
+
+      // Set header untuk license statis (kalau pakai kode base64 dalam license_key)
+      player.getNetworkingEngine().registerRequestFilter((type, request) => {
+        if (type === shaka.net.NetworkingEngine.RequestType.LICENSE) {
+          // Formatnya "key_id:key" (base16/hex), tergantung server apakah butuh Authorization
+          request.headers['X-License-Key'] = '47c03f29f04747d2a298c0ad63f3b2c1:8b48b2cb2743b91d5f20cf2622067f3a';
+        }
+      });
+
+      try {
+        await player.load('https://atemeshield1-voe.sysln.id/live/eds/EUROSPORTHD/mpd/EUROSPORTHD.mpd');
+        console.log('Video loaded!');
+      } catch (e) {
+        console.error('Gagal memuat video:', e);
+        alert('Tidak bisa memutar video.');
+      }
+    }
+
+    shaka.polyfill.installAll();
+    if (shaka.Player.isBrowserSupported()) {
+      initPlayer();
+    } else {
+      alert('Browser tidak mendukung Shaka Player.');
+    }
+  </script>
+</body>
+</html>
